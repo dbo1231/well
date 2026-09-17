@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows System Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --win-blue: #0078d4;
+            --win-bg: #1a1a1a;
+            --win-card: rgba(32, 32, 32, 0.85);
+            --win-border: rgba(255, 255, 255, 0.1);
+            --win-text: #ffffff;
+            --taskbar-bg: rgba(28, 28, 28, 0.75);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #004a92; /* Windows Desktop Blue */
+            background-image: radial-gradient(circle at 50% 50%, #005a9e 0%, #001832 100%);
+            color: var(--win-text);
+            overflow: hidden;
+        }
+
+        /* Windows Login Screen */
+        #loginScreen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Mica Material Window */
+        .win-window {
+            background: var(--win-card);
+            backdrop-filter: blur(25px) saturate(150%);
+            -webkit-backdrop-filter: blur(25px) saturate(150%);
+            border-radius: 8px;
+            border: 1px solid var(--win-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+            animation: winOpen 0.3s ease-out;
+        }
+
+        @keyframes winOpen {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Windows Window Title Bar */
+        .win-header {
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 0 0 12px;
+            font-size: 12px;
+        }
+
+        .win-controls {
+            display: flex;
+            height: 100%;
+        }
+
+        .win-btn-ctrl {
+            width: 46px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            cursor: default;
+        }
+
+        .win-btn-ctrl:hover { background: rgba(255, 255, 255, 0.1); }
+        .win-btn-ctrl.close:hover { background: #e81123; }
+
+        .win-content {
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 2px solid var(--win-blue); /* Signature Win11 input line */
+            border-radius: 4px;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: background 0.2s;
+        }
+
+        input:focus { background: rgba(0, 0, 0, 0.6); }
+
+        .win-primary-btn {
+            background: var(--win-blue);
+            color: white;
+            padding: 8px 32px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .win-primary-btn:hover { filter: brightness(1.1); }
+
+        /* Centered Taskbar (Win 11 Style) */
+        .taskbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: var(--taskbar-bg);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            z-index: 1000;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .task-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .task-icon:hover { background: rgba(255, 255, 255, 0.1); }
+
+        .task-icon::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            width: 6px;
+            height: 3px;
+            background: var(--win-blue);
+            border-radius: 2px;
+            display: none;
+        }
+
+        .task-icon.active::after { display: block; }
+
+        .task-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 6px 15px;
+            color: white;
+            width: 200px;
+            margin: 0 10px;
+            font-size: 12px;
+        }
+
+        /* Iframe Display */
+        #gameArea {
+            display: none;
+            height: calc(100vh - 48px);
+            width: 100vw;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+
+<div id="loginScreen">
+    <div class="win-window" id="authBox">
+        <div class="win-header">
+            <span>Windows Security</span>
+            <div class="win-controls">
+                <div class="win-btn-ctrl">‒</div>
+                <div class="win-btn-ctrl">▢</div>
+                <div class="win-btn-ctrl close">✕</div>
+            </div>
+        </div>
+        <div class="win-content">
+            <h2 style="font-weight: 400; margin-top: 0;">Sign in</h2>
+            <p style="font-size: 13px; color: #ccc; margin-bottom: 25px;">Please enter your system pin.</p>
+            <input id="codeInput" type="password" placeholder="PIN" onkeydown="if(event.key === 'Enter') checkCode()">
+            <button class="win-primary-btn" onclick="checkCode()">Submit</button>
+            <p id="status" style="font-size: 12px; margin-top: 15px;"></p>
+        </div>
+    </div>
+
+    <div class="win-window" id="siteInputArea" style="display:none;">
+        <div class="win-header">
+            <span>Microsoft Edge</span>
+            <div class="win-controls">
+                <div class="win-btn-ctrl">‒</div>
+                <div class="win-btn-ctrl">▢</div>
+                <div class="win-btn-ctrl close">✕</div>
+            </div>
+        </div>
+        <div class="win-content">
+            <h3 style="font-weight: 400; margin-top: 0;">Launch Environment</h3>
+            <input id="siteInput" type="text" placeholder="Search the web or enter URL" onkeydown="if(event.key === 'Enter') loadSite(this.value)">
+            <button class="win-primary-btn" onclick="loadSite(document.getElementById('siteInput').value)">Launch</button>
+        </div>
+    </div>
+</div>
+
+<div id="gameArea">
+    <iframe id="gameIframe" src="about:blank"></iframe>
+    
+    <div class="taskbar">
+        <div class="task-icon" title="Start">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#00adef"><path d="M0 0h11.4v11.4H0V0zm12.6 0H24v11.4H12.6V0zM0 12.6h11.4V24H0V12.6zm12.6 0H24V24H12.6V12.6z"/></svg>
+        </div>
+
+        <input id="navSearch" class="task-input" type="text" placeholder="Type here to search" 
+               onkeydown="if(event.key === 'Enter') loadSite(this.value)">
+
+        <div class="task-icon active" onclick="loadSite('gn-math.dev')" title="Games">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4M15 13v.01M18 11v.01"/></svg>
+        </div>
+
+        <div class="task-icon" onclick="loadSite('vidbox.cc')" title="Entertainment">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M19.82 2H4.18C2.97 2 2 2.97 2 4.18V19.82C2 21.03 2.97 22 4.18 22H19.82C21.03 22 22 21.03 22 19.82V4.18C22 2.97 21.03 2 19.82 2Z"/><path d="M7 2V22"/><path d="M17 2V22"/><path d="M2 12H22"/><path d="M2 7H7"/><path d="M2 17H7"/><path d="M17 17H22"/><path d="M17 7H22"/></svg>
+        </div>
+
+        <div class="task-icon" onclick="location.reload()" title="Power">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff4d4d" stroke-width="2"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+        </div>
+    </div>
+</div>
+
+<script>
+    const PASS_KEY = "blayn";
+
+    function checkCode() {
+        const input = document.getElementById("codeInput").value.trim().toLowerCase();
+        const status = document.getElementById("status");
+        if (input === PASS_KEY) {
+            document.getElementById("authBox").style.display = "none";
+            document.getElementById("siteInputArea").style.display = "block";
+        } else {
+            status.innerText = "Incorrect PIN. Try again.";
+            status.style.color = "#ff4d4d";
+        }
+    }
+
+    function loadSite(target) {
+        if (!target) return;
+        let url = target.trim();
+        if (!url.includes('.') || url.includes(' ')) {
+            url = "https://www.google.com/search?q=" + encodeURIComponent(url);
+        } else {
+            url = url.replace(/^https?:\/\//, '');
+            url = "https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2F" + url;
+        }
+        document.getElementById("gameIframe").src = url;
+        document.getElementById("loginScreen").style.opacity = "0";
+        setTimeout(() => {
+            document.getElementById("loginScreen").style.display = "none";
+            document.getElementById("gameArea").style.display = "block";
+            setTimeout(() => { document.getElementById("gameArea").style.opacity = "1"; }, 50);
+        }, 500);
+    }
+</script>
+
+</body>
+</html>
